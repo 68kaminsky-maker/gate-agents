@@ -25,9 +25,9 @@ window.BLUEPRINT = {
           { v: 'מושהה', color: 'yellow' },
           { v: 'חסום', color: 'gray', done: true }
         ] },
-        { id: 'days', label: 'באילו ימים מותר', type: 'select', options: ['כל הימים', 'ימים א׳–ה׳', 'ימים א׳–ו׳'] },
-        { id: 'from', label: 'משעה', type: 'text' },
-        { id: 'to', label: 'עד שעה', type: 'text' },
+        { id: 'days', label: 'באילו ימים מותר (ריק = כל הימים)', type: 'select', options: ['כל הימים', 'ימים א׳–ה׳', 'ימים א׳–ו׳'] },
+        { id: 'from', label: 'משעה, למשל 04:30 (ריק = ללא הגבלה)', type: 'text' },
+        { id: 'to', label: 'עד שעה, למשל 07:00 (ריק = ללא הגבלה)', type: 'text' },
         { id: 'phone', label: 'טלפון', type: 'phone' },
         { id: 'company', label: 'חברה או סוכנות', type: 'text' },
         { id: 'notes', label: 'הערות', type: 'longtext' }

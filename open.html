@@ -149,7 +149,13 @@
       }
       go.disabled = false; go.textContent = 'פתח את השער';
     });
-    code.focus();
+    // קישור אישי: הקוד מגיע אחרי # (לא נשלח לשרת), נשמר בטלפון, והסוכן רק לוחץ על הכפתור
+    const m = location.hash.match(/c=(\d{4,6})/);
+    try {
+      if (m) { localStorage.setItem('gate-code', m[1]); history.replaceState(null, '', location.pathname); }
+      code.value = localStorage.getItem('gate-code') || '';
+    } catch (e) { if (m) code.value = m[1]; }
+    if (code.value) go.focus(); else code.focus();
   })();
   </script>
 </body>
