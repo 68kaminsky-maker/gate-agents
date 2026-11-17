@@ -642,7 +642,12 @@
     root.innerHTML = `<div class="login"><form class="card" data-login>
       <h1>${esc(BP.name)}</h1><p class="muted">נשלח לך קישור כניסה למייל. אין צורך בסיסמה.</p>
       <div class="f"><label for="l-email">המייל שלך</label><input id="l-email" type="email" required dir="ltr" autocomplete="email"></div>
-      <button class="btn btn--primary" type="submit">שלחו לי קישור</button><p class="muted" data-login-note></p></form></div>`;
+      <button class="btn btn--primary" type="submit">שלחו לי קישור</button><p class="muted" data-login-note></p></form>
+      <div class="card" style="margin-top:12px;text-align:center"><button class="btn btn--ghost" type="button" data-google style="width:100%">כניסה עם חשבון גוגל</button></div></div>`;
+    root.querySelector('[data-google]').addEventListener('click', async () => {
+      const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href.split('#')[0] } });
+      if (error) root.querySelector('[data-login-note]').textContent = 'לא הצלחנו להתחבר עם גוגל. נסו שוב.';
+    });
     root.querySelector('[data-login]').addEventListener('submit', async e => {
       e.preventDefault();
       const email = root.querySelector('#l-email').value.trim();
