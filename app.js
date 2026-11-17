@@ -649,8 +649,30 @@
       const note = root.querySelector('[data-login-note]');
       note.textContent = 'שולח...';
       const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split('#')[0] } });
-      note.textContent = error ? 'לא הצלחנו לשלוח. בדקו את המייל ונסו שוב.' : 'שלחנו קישור. פתחו את המייל ולחצו עליו.';
+      if (error) { note.textContent = 'לא הצלחנו לשלוח. בדקו את המייל ונסו שוב.'; return; }
+      renderCodeStep(email);
     }, { once: true });
+  }
+  // שלב שני: הקוד מהמייל (6 ספרות). אפשר גם ללחוץ על הקישור במייל, והכל נכנס בלי שאלות.
+  function renderCodeStep(email) {
+    root.innerHTML = `<div class="login"><form class="card" data-code>
+      <h1>${esc(BP.name)}</h1>
+      <p class="muted">שלחנו קוד ל-<span class="ltr">${esc(email)}</span>. הקלידו אותו כאן.</p>
+      <div class="f"><label for="l-code">הקוד מהמייל</label><input id="l-code" inputmode="numeric" autocomplete="one-time-code" dir="ltr" maxlength="8" required></div>
+      <button class="btn btn--primary" type="submit">כניסה</button>
+      <p class="muted" data-code-note></p>
+      <p class="muted"><a href="#" data-again>לא קיבלתי, שלחו שוב</a></p></form></div>`;
+    const note = root.querySelector('[data-code-note]');
+    root.querySelector('[data-again]').addEventListener('click', e => { e.preventDefault(); renderLogin(); });
+    root.querySelector('[data-code]').addEventListener('submit', async e => {
+      e.preventDefault();
+      const token = root.querySelector('#l-code').value.replace(/\D/g, '');
+      if (!token) { note.textContent = 'הקלידו את הקוד מהמייל.'; return; }
+      note.textContent = 'בודק...';
+      const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
+      if (error) { note.textContent = 'הקוד לא נכון או שפג תוקפו. בקשו קוד חדש.'; return; }
+      location.reload();
+    });
   }
   async function loadLive() {
     let { data: mem } = await sb.from('members').select('role, workspace:workspaces(id, name, settings)').limit(1);
