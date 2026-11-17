@@ -1,8 +1,8 @@
 // מבנה המערכת. הפורמט המלא: library/blueprint-format.md
 window.BLUEPRINT = {
   id: 'gate-agents',
-  name: 'שער · סוכנים',
-  purpose: 'כל סוכן מקבל קוד אישי קצר, מקליד אותו והשער נפתח, גם בחמש בבוקר. אתה שולט מי נכנס, מתי ומי ניסה.',
+  name: 'שער · נהגים',
+  purpose: 'כל נהג מקבל קוד אישי קצר, מקליד אותו והשער נפתח, גם בחמש בבוקר. אתה שולט מי נכנס, מתי ומי ניסה.',
   owner: 'ישראל',
   style: 'bold-dark',
   styleOptions: ['bold-dark', 'clean-pro', 'soft-air'],
@@ -15,10 +15,10 @@ window.BLUEPRINT = {
 
   tables: [
     {
-      id: 'agents', label: 'סוכנים', item: 'סוכן', icon: 'users',
+      id: 'agents', label: 'נהגים', item: 'נהג', icon: 'users',
       title: 'name', subtitle: 'code', status: 'status',
       fields: [
-        { id: 'name', label: 'שם הסוכן', type: 'text', required: true },
+        { id: 'name', label: 'שם הנהג', type: 'text', required: true },
         { id: 'code', label: 'קוד כניסה (4 עד 6 ספרות)', type: 'text', required: true, unique: true, digits: [4, 6], randomCode: 6 },
         { id: 'status', label: 'סטטוס', type: 'status', options: [
           { v: 'פעיל', color: 'green' },
@@ -31,7 +31,7 @@ window.BLUEPRINT = {
         { id: 'until', label: 'תוקף הקוד עד תאריך (ריק = ללא הגבלה)', type: 'date' },
         { id: 'oneTime', label: 'קוד חד-פעמי: נפסל אחרי פתיחה אחת', type: 'checkbox' },
         { id: 'phone', label: 'טלפון', type: 'phone' },
-        { id: 'company', label: 'חברה או סוכנות', type: 'text' },
+        { id: 'company', label: 'חברה או חברת הובלה', type: 'text' },
         { id: 'notes', label: 'הערות', type: 'longtext' }
       ]
     },
@@ -55,7 +55,7 @@ window.BLUEPRINT = {
   dashboard: {
     kpis: [
       { label: 'פתיחות היום', table: 'log', where: { result: 'נפתח' }, period: 'today' },
-      { label: 'סוכנים עם קוד פעיל', table: 'agents', count: { status: 'פעיל' } },
+      { label: 'נהגים עם קוד פעיל', table: 'agents', count: { status: 'פעיל' } },
       { label: 'ניסיונות שנדחו היום', table: 'log', where: { result: ['נדחה', 'מחוץ לשעות'] }, period: 'today' },
       { label: 'קודים מושהים', table: 'agents', count: { status: 'מושהה' } }
     ],
@@ -65,10 +65,10 @@ window.BLUEPRINT = {
   extraNav: [{ view: 'gate', label: 'שער', icon: 'gate' }],
 
   automations: [
-    { label: 'סוכן מקליד קוד בדף אחד, והשער נפתח', status: 'פעיל' },
-    { label: 'הגבלה לפי ימים ושעות לכל סוכן', status: 'פעיל' },
+    { label: 'נהג מקליד קוד בדף אחד, והשער נפתח', status: 'פעיל' },
+    { label: 'הגבלה לפי ימים ושעות לכל נהג', status: 'פעיל' },
     { label: 'יומן של כל פתיחה וכל ניסיון שנדחה', status: 'פעיל' },
-    { label: 'הודעת וואטסאפ מוכנה לסוכן עם הקוד והקישור', status: 'פעיל' },
+    { label: 'הודעת וואטסאפ מוכנה לנהג עם הקוד והקישור', status: 'פעיל' },
     { label: 'חיבור לשער האמיתי ב-PalGate', status: 'בהמשך' }
   ],
 

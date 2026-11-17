@@ -371,7 +371,7 @@
         ${t.subtitle && r[t.subtitle] ? `<p>${esc(display(t, F(t, t.subtitle), r[t.subtitle]))}</p>` : ''}
         ${sf ? `<div class="statuses">${optList(sf).map(o => `<button style="--c:var(--c-${o.color || 'gray'})" class="${r[sf.id] === o.v ? 'on' : ''}" data-set-status="${esc(o.v)}" data-t="${t.id}" data-id="${esc(r.id)}">${esc(o.v)}</button>`).join('')}</div>` : ''}
       </section>
-      ${(detailExtras[t.id] || []).map(fn => { try { return fn(r, helpers, { isNew: Boolean(params && params.get('new')) }) || ''; } catch (e) { return ''; } }).join('')}
+      ${(detailExtras[t.id] || []).map(fn => { try { return fn(r, helpers, { isNew: Boolean(params && params.get('new')), changed: ((params && params.get('changed')) || '').split(',').filter(Boolean) }) || ''; } catch (e) { return ''; } }).join('')}
       <div class="actions">${actions.join('')}</div>
       ${shown.length ? `<dl class="card fields">${shown.map(f => `<div><dt>${esc(f.label)}</dt><dd class="${f.type === 'longtext' ? 'long' : ''}">${f.type === 'photo' ? `<img src="${esc(r[f.id])}" alt="">` : f.type === 'phone' || f.type === 'email' || f.type === 'money' ? `<span class="ltr">${esc(display(t, f, r[f.id]))}</span>` : esc(display(t, f, r[f.id]))}</dd></div>`).join('')}</dl>` : ''}
       ${related.map(({ ot, f }) => { const rows = sortRows(ot, (DB.rows[ot.id] || []).filter(x => x[f.id] === r.id)); return `<section class="section"><div class="section__head"><h2>${esc(ot.label)} (${rows.length})</h2><a href="#/t/${ot.id}/new?${f.id}=${encodeURIComponent(r.id)}">+ ${esc(ot.item)}</a></div><div class="list">${rows.length ? rows.map(x => itemHtml(ot, x)).join('') : `<div class="empty">עוד אין ${esc(ot.label)} ל${esc(t.item)} הזה</div>`}</div></section>`; }).join('')}
@@ -469,7 +469,7 @@
   // מסך מיוחד: LazyApp.view('report', (params, h) => h.top('דוח') + '<div class="card set">...</div>')
   // ובקובץ המבנה: extraNav: [{ view: 'report', label: 'דוח', icon: 'chart' }]
   // תוספת לכרטיס פרטים של טבלה: LazyApp.detailExtra('agents', (row, h, ctx) => '<section class="card set">...</section>')
-  // ctx.isNew = הרשומה נוצרה הרגע
+  // ctx.isNew = הרשומה נוצרה הרגע. ctx.changed = רשימת שדות ששונו בשמירה האחרונה
   const customViews = {};
   const detailExtras = {};
   const helpers = {
@@ -602,6 +602,7 @@
     e.preventDefault();
     const t = T(form.dataset.form);
     const old = form.dataset.id ? DB.rows[t.id].find(x => x.id === form.dataset.id) : null;
+    const before = old ? { ...old } : null; // העתק לפני השמירה: במצב הדגמה השמירה מעדכנת את אותה רשומה
     const row = old ? { ...old } : {};
     let firstBad = null;
     for (const f of t.fields) {
@@ -618,7 +619,7 @@
       else if (f.type === 'phone' && v && digits(v).length < 9) bad = 'מספר טלפון לא תקין';
       else if (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v)) bad = 'כתובת מייל לא תקינה';
       else if (f.digits && v && !new RegExp(`^\\d{${f.digits[0]},${f.digits[1]}}$`).test(v)) bad = `צריך ${f.digits[0]} עד ${f.digits[1]} ספרות בלבד`;
-      else if (f.unique && v && (DB.rows[t.id] || []).some(x => x.id !== (old && old.id) && String(x[f.id] ?? '').trim() === String(v))) bad = 'הערך הזה כבר קיים אצל סוכן אחר';
+      else if (f.unique && v && (DB.rows[t.id] || []).some(x => x.id !== (old && old.id) && String(x[f.id] ?? '').trim() === String(v))) bad = 'הערך הזה כבר קיים אצל נהג אחר';
       if (box) { box.classList.toggle('bad', Boolean(bad)); if (err) { err.hidden = !bad; err.textContent = bad; } }
       if (bad && !firstBad) firstBad = box;
       row[f.id] = v;
@@ -627,7 +628,8 @@
     delete row._sample;
     try {
       const saved = await api.save(t.id, row);
-      location.hash = `#/t/${t.id}/${saved.id}${old ? '' : '?new=1'}`;
+      const changed = old ? t.fields.filter(f => String(before[f.id] ?? "") !== String(row[f.id] ?? "")).map(f => f.id) : [];
+      location.hash = `#/t/${t.id}/${saved.id}${old ? (changed.length ? '?changed=' + changed.join(',') : '') : '?new=1'}`;
       setTimeout(() => toast(old ? 'השינויים נשמרו' : `${t.item} נוסף`), 30);
     } catch (err) { toast(err.message || 'השמירה נכשלה'); }
   });
