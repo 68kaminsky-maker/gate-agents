@@ -140,8 +140,14 @@
       if (!existing) clean.created_at = clean.created_at || now;
       if (LIVE) {
         const { id, created_at, updated_at, _sample, ...data } = clean;
+        // בודקים שהחיבור עדיין פעיל, ומתקנים אותו אם צריך, לפני השמירה
+        const { data: sess } = await sb.auth.getSession();
+        if (!sess || !sess.session) throw new Error('החיבור פג. התנתקו והתחברו מחדש במייל.');
         const { error } = await sb.from('records').upsert({ id, workspace_id: ws.id, table_name: tableId, data, updated_at: now });
-        if (error) throw error;
+        if (error) {
+          if (/row-level security/i.test(error.message || '')) throw new Error('אין הרשאה לשמור כאן. התנתקו והתחברו מחדש במייל.');
+          throw error;
+        }
       }
       if (existing) Object.assign(existing, clean); else list.unshift(clean);
       if (!LIVE && !Demo.persist()) throw new Error('הדפדפן לא הצליח לשמור. אולי התמונה גדולה מדי.');
