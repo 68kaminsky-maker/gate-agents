@@ -1,7 +1,7 @@
 // שומר את קבצי המערכת בטלפון, כדי שהיא תיפתח מהר גם עם קליטה חלשה.
 // הנתונים עצמם תמיד מגיעים מהענן.
-const CACHE = 'lazy-app-v1';
-const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'blueprint.js', 'config.js', 'custom.js', 'icon.svg', 'manifest.webmanifest'];
+const CACHE = 'gate-agents-v2';
+const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'blueprint.js', 'config.js', 'custom.js', 'icon.svg', 'icon-192.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
