@@ -121,7 +121,8 @@
       res.className = 'result show ' + kind;
       $('ico').textContent = kind === 'ok' ? '✔' : kind === 'warn' ? '!' : '✖';
       $('msg').textContent = msg;
-      $('det').textContent = det || '';
+      // שעות כמו 04:30–07:00 מתהפכות בעברית, לכן כותבים "בין 04:30 ל-07:00"
+      $('det').textContent = String(det || '').replace(/(\d{1,2}:\d{2})\s*–\s*(\d{1,2}:\d{2})/g, 'בין $1 ל-$2');
     }
 
     $('f').addEventListener('submit', async e => {
