@@ -40,6 +40,12 @@
     .result small { display: block; font-weight: 400; color: var(--muted); font-size: 1rem; margin-top: 2px; }
     footer { color: var(--muted); font-size: .9rem; text-align: center; }
     .note { background: rgba(249,185,20,.12); color: var(--accent); border-radius: 14px; padding: 12px 14px; font-size: 1rem; line-height: 1.4; }
+    .install { background: var(--card); border: 1px solid #2A2A33; border-radius: 16px; padding: 0 16px; }
+    .install summary { min-height: 52px; display: flex; align-items: center; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+    .install summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+    .install h2 { font-size: 1.05rem; margin: 6px 0 4px; color: var(--accent); }
+    .install ol { margin: 0 0 14px; padding-inline-start: 22px; line-height: 1.7; font-size: 1rem; }
+    .install p { margin: 0 0 14px; color: var(--muted); font-size: 1rem; line-height: 1.5; }
     .demo { background: #2A2A33; color: var(--muted); border-radius: 12px; padding: 8px 12px; font-size: .9rem; text-align: center; }
   </style>
 </head>
@@ -60,6 +66,28 @@
     </form>
     <div class="result" id="res" role="status" aria-live="polite"><span id="ico" aria-hidden="true"></span><div><span id="msg"></span><small id="det"></small></div></div>
     <div class="note" id="note" hidden>הקוד שלך נשמר בטלפון הזה. שמור אותו גם בנפרד, כי תצטרך אותו בכל כניסה, למשל אם תחליף טלפון.</div>
+    <details class="install" id="install" hidden>
+      <summary>להוסיף את השער למסך הבית (פעם אחת)</summary>
+      <section id="inst-ios" hidden>
+        <h2>באייפון</h2>
+        <ol>
+          <li>פותחים את הקישור ב-<b>Safari</b>. אם הוא נפתח בתוך וואטסאפ, בוחרים "פתיחה ב-Safari".</li>
+          <li>לוחצים על כפתור השיתוף: ריבוע עם חץ, בתחתית המסך.</li>
+          <li>בוחרים <b>"הוספה למסך הבית"</b> ואז "הוספה".</li>
+          <li>פותחים מהאייקון החדש, <b>מקלידים את הקוד פעם אחת</b>, והוא נשמר.</li>
+        </ol>
+      </section>
+      <section id="inst-and" hidden>
+        <h2>באנדרואיד</h2>
+        <ol>
+          <li>פותחים את הקישור ב-<b>Chrome</b>.</li>
+          <li>לוחצים על שלוש הנקודות בפינה למעלה.</li>
+          <li>בוחרים <b>"הוספה למסך הבית"</b> או "התקנת אפליקציה", ומאשרים.</li>
+          <li>האייקון מופיע במסך הבית, ולוחצים עליו כדי לפתוח את השער.</li>
+        </ol>
+      </section>
+      <p>אפשר גם בלי זה: פשוט לפתוח את הקישור מההודעה בוואטסאפ ולהקליד את הקוד.</p>
+    </details>
     <footer>השער נפתח רק למי שקיבל קוד. כל ניסיון נרשם.</footer>
   </main>
 
@@ -168,6 +196,19 @@
       code.value = localStorage.getItem('gate-code') || '';
     } catch (e) { if (m) code.value = m[1]; }
     if (code.value) { $('note').hidden = false; go.focus(); } else code.focus();
+
+    // כרטיס "הוספה למסך הבית": לא מוצג אם כבר פתוח מהאייקון. מראים רק את ההסבר של הטלפון הזה (בשולחני: את שניהם)
+    try {
+      const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+      if (!standalone) {
+        const ua = navigator.userAgent || '';
+        const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        const android = /Android/.test(ua);
+        $('inst-ios').hidden = !(ios || !android);
+        $('inst-and').hidden = !(android || !ios);
+        $('install').hidden = false;
+      }
+    } catch (e) { /* לא קריטי */ }
   })();
   </script>
 </body>
