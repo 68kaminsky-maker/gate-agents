@@ -1,6 +1,6 @@
 // שומר את קבצי המערכת בטלפון, כדי שהיא תיפתח מהר גם עם קליטה חלשה.
 // הנתונים עצמם תמיד מגיעים מהענן.
-const CACHE = 'gate-agents-v2';
+const CACHE = 'gate-agents-v3';
 const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'blueprint.js', 'config.js', 'custom.js', 'icon.svg', 'icon-192.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {

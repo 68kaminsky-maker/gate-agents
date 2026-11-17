@@ -19,7 +19,7 @@ window.BLUEPRINT = {
       title: 'name', subtitle: 'code', status: 'status',
       fields: [
         { id: 'name', label: 'שם הסוכן', type: 'text', required: true },
-        { id: 'code', label: 'קוד כניסה (4 עד 6 ספרות)', type: 'text', required: true },
+        { id: 'code', label: 'קוד כניסה (4 עד 6 ספרות)', type: 'text', required: true, unique: true, digits: [4, 6], randomCode: 5 },
         { id: 'status', label: 'סטטוס', type: 'status', options: [
           { v: 'פעיל', color: 'green' },
           { v: 'מושהה', color: 'yellow' },

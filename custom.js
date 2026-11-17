@@ -11,7 +11,7 @@
     const agents = (h.rows.agents || []).filter(a => a.status === 'פעיל');
     const rows = agents.map(a => {
       const link = personalLink(a);
-      const text = `היי ${a.name}, זה הקישור האישי שלך לפתיחת השער. פותחים אותו ולוחצים על "פתח את השער":\n${link}`;
+      const text = `היי ${a.name}, זה הקישור האישי שלך לפתיחת השער:\n${link}\n\nהקוד האישי שלך: ${digits(a.code)}\nחשוב: שמור את הקוד, תצטרך אותו בכל כניסה.\nפותחים את הקישור ולוחצים "פתח את השער".`;
       const wa = a.phone ? `https://wa.me/${intl(a.phone)}?text=${encodeURIComponent(text)}` : '';
       return `<div class="item" style="flex-wrap:wrap;gap:8px">
         <span class="item__av">${h.icon('users')}</span>

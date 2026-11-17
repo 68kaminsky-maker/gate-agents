@@ -37,6 +37,7 @@
     .result.warn { background: rgba(251,191,36,.15); color: var(--yellow); }
     .result small { display: block; font-weight: 400; color: var(--muted); font-size: 1rem; margin-top: 2px; }
     footer { color: var(--muted); font-size: .9rem; text-align: center; }
+    .note { background: rgba(249,185,20,.12); color: var(--accent); border-radius: 14px; padding: 12px 14px; font-size: 1rem; line-height: 1.4; }
     .demo { background: #2A2A33; color: var(--muted); border-radius: 12px; padding: 8px 12px; font-size: .9rem; text-align: center; }
   </style>
 </head>
@@ -56,6 +57,7 @@
       <button id="go" type="submit">פתח את השער</button>
     </form>
     <div class="result" id="res" role="status" aria-live="polite"><span id="ico" aria-hidden="true"></span><div><span id="msg"></span><small id="det"></small></div></div>
+    <div class="note" id="note" hidden>הקוד שלך נשמר בטלפון הזה. שמור אותו גם בנפרד, כי תצטרך אותו בכל כניסה, למשל אם תחליף טלפון.</div>
     <footer>השער נפתח רק למי שקיבל קוד. כל ניסיון נרשם.</footer>
   </main>
 
@@ -156,7 +158,7 @@
       if (m) { localStorage.setItem('gate-code', m[1]); history.replaceState(null, '', location.pathname); }
       code.value = localStorage.getItem('gate-code') || '';
     } catch (e) { if (m) code.value = m[1]; }
-    if (code.value) go.focus(); else code.focus();
+    if (code.value) { $('note').hidden = false; go.focus(); } else code.focus();
   })();
   </script>
 </body>

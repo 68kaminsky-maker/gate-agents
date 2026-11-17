@@ -371,6 +371,19 @@
       <div class="btn-row"><button class="btn btn--danger" data-delete="${t.id}" data-id="${esc(r.id)}">${icon('trash')}מחיקה</button></div>`;
   };
 
+  // קוד אקראי שלא קיים כבר באותה טבלה (שדה עם randomCode: אורך הקוד)
+  function genCode(t, f) {
+    const len = Math.min(8, Math.max(3, +f.randomCode || 5));
+    const used = new Set((DB.rows[t.id] || []).map(x => String(x[f.id] ?? '').trim()));
+    for (let i = 0; i < 500; i++) {
+      let s = '';
+      for (let k = 0; k < len; k++) s += Math.floor(Math.random() * 10);
+      if (s[0] === '0' || used.has(s) || /^(\d)\1+$/.test(s) || '0123456789'.includes(s) || '9876543210'.includes(s)) continue;
+      return s;
+    }
+    return '';
+  }
+
   views.form = (t, id, params) => {
     const r = id ? (DB.rows[t.id] || []).find(x => x.id === id) : null;
     if (id && !r) return views.detail(t, id);
@@ -379,6 +392,7 @@
       params.forEach((v, k) => { values[k] = v; });
       const sf = statusField(t);
       if (sf && !values[sf.id]) values[sf.id] = optList(sf)[0]?.v;
+      for (const f of t.fields) if (f.randomCode && !values[f.id]) values[f.id] = genCode(t, f);
     }
     return `${topHtml(r ? `עריכת ${t.item}` : `${t.item} ${/ה$/.test(t.item) ? 'חדשה' : 'חדש'}`, '', r ? `#/t/${t.id}/${esc(r.id)}` : `#/t/${t.id}`)}
       <form class="form" data-form="${t.id}" data-id="${r ? esc(r.id) : ''}" novalidate>
@@ -410,7 +424,9 @@
         return wrap(`<select id="${id}" name="${f.id}"><option value="">בחירת ${esc(rt.item)}</option>${rows.map(x => `<option value="${esc(x.id)}" ${val === x.id ? 'selected' : ''}>${esc(titleOf(rt, x))}</option>`).join('')}</select>`);
       }
       case 'photo': return wrap(`<div class="photo-in">${val ? `<img src="${esc(val)}" alt="">` : ''}<label class="btn btn--ghost btn--sm">${icon('camera')}${val ? 'החלפה' : 'צילום או העלאה'}<input type="file" accept="image/*" capture="environment" data-photo="${f.id}" hidden></label><input type="hidden" name="${f.id}" value="${esc(val)}"></div>`, false);
-      default: return wrap(`<input id="${id}" name="${f.id}" type="text" value="${esc(val)}">`);
+      default:
+        if (f.randomCode) return wrap(`<div style="display:flex;gap:8px;align-items:center"><input id="${id}" name="${f.id}" type="text" inputmode="numeric" dir="ltr" autocomplete="off" value="${esc(val)}" style="flex:1"><button type="button" class="btn btn--ghost btn--sm" data-gen-code="${f.id}">קוד חדש</button></div>`);
+        return wrap(`<input id="${id}" name="${f.id}" type="text" value="${esc(val)}">`);
     }
   }
 
@@ -515,6 +531,12 @@
     const el = e.target.closest('button, a');
     if (!el) return;
     const d = el.dataset;
+    if (d.genCode) {
+      const form = el.closest('[data-form]'); const t = T(form.dataset.form); const f = F(t, d.genCode);
+      const input = form.querySelector(`[name="${f.id}"]`);
+      if (input) input.value = genCode(t, f);
+      return;
+    }
     if (d.filter !== undefined) { ui.filter[d.filter] = d.v; render(); return; }
     if (d.mode) { ui.mode[d.mode] = d.v; render(); return; }
     if (d.setStatus) {
@@ -583,6 +605,8 @@
       if (f.required && (v === '' || v == null)) bad = 'שדה חובה';
       else if (f.type === 'phone' && v && digits(v).length < 9) bad = 'מספר טלפון לא תקין';
       else if (f.type === 'email' && v && !/^\S+@\S+\.\S+$/.test(v)) bad = 'כתובת מייל לא תקינה';
+      else if (f.digits && v && !new RegExp(`^\\d{${f.digits[0]},${f.digits[1]}}$`).test(v)) bad = `צריך ${f.digits[0]} עד ${f.digits[1]} ספרות בלבד`;
+      else if (f.unique && v && (DB.rows[t.id] || []).some(x => x.id !== (old && old.id) && String(x[f.id] ?? '').trim() === String(v))) bad = 'הערך הזה כבר קיים אצל סוכן אחר';
       if (box) { box.classList.toggle('bad', Boolean(bad)); if (err) { err.hidden = !bad; err.textContent = bad; } }
       if (bad && !firstBad) firstBad = box;
       row[f.id] = v;

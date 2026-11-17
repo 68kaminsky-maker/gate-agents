@@ -300,7 +300,7 @@ h1, h2, h3 { font-family: var(--font-head); font-weight: var(--head-weight); lin
 .f.bad input, .f.bad textarea, .f.bad select { border-color: var(--c-red); }
 .pills { display: flex; flex-wrap: wrap; gap: 8px; }
 .pills label { display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); font-weight: 700; cursor: pointer; backdrop-filter: var(--glass); }
-.pills input { position: absolute; opacity: 0; pointer-events: none; }
+.pills input { position: absolute; opacity: 0; pointer-events: none; width: 1px !important; height: 1px !important; min-height: 0 !important; padding: 0 !important; margin: 0; border: 0 !important; }
 .pills label:has(input:checked) { color: var(--on-accent); background: var(--accent); border-color: transparent; }
 .pills label.st:has(input:checked) { color: #fff; background: var(--c); }
 .switch { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: var(--radius); background: var(--surface); font-weight: 700; }
