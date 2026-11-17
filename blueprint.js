@@ -19,7 +19,7 @@ window.BLUEPRINT = {
       title: 'name', subtitle: 'code', status: 'status',
       fields: [
         { id: 'name', label: 'שם הסוכן', type: 'text', required: true },
-        { id: 'code', label: 'קוד כניסה (4 עד 6 ספרות)', type: 'text', required: true, unique: true, digits: [4, 6], randomCode: 5 },
+        { id: 'code', label: 'קוד כניסה (4 עד 6 ספרות)', type: 'text', required: true, unique: true, digits: [4, 6], randomCode: 6 },
         { id: 'status', label: 'סטטוס', type: 'status', options: [
           { v: 'פעיל', color: 'green' },
           { v: 'מושהה', color: 'yellow' },
@@ -28,6 +28,8 @@ window.BLUEPRINT = {
         { id: 'days', label: 'באילו ימים מותר (ריק = כל הימים)', type: 'select', options: ['כל הימים', 'ימים א׳–ה׳', 'ימים א׳–ו׳'] },
         { id: 'from', label: 'משעה, למשל 04:30 (ריק = ללא הגבלה)', type: 'text' },
         { id: 'to', label: 'עד שעה, למשל 07:00 (ריק = ללא הגבלה)', type: 'text' },
+        { id: 'until', label: 'תוקף הקוד עד תאריך (ריק = ללא הגבלה)', type: 'date' },
+        { id: 'oneTime', label: 'קוד חד-פעמי: נפסל אחרי פתיחה אחת', type: 'checkbox' },
         { id: 'phone', label: 'טלפון', type: 'phone' },
         { id: 'company', label: 'חברה או סוכנות', type: 'text' },
         { id: 'notes', label: 'הערות', type: 'longtext' }
@@ -44,7 +46,8 @@ window.BLUEPRINT = {
           { v: 'נדחה', color: 'red', done: true }
         ] },
         { id: 'when', label: 'מתי', type: 'datetime' },
-        { id: 'note', label: 'פירוט', type: 'text' }
+        { id: 'note', label: 'פירוט', type: 'text' },
+        { id: 'ip', label: 'מזהה מכשיר מקוצר', type: 'text' }
       ]
     }
   ],

@@ -472,6 +472,7 @@
     toast: (text, undo) => toast(text, undo),
     render: () => render(),
     refresh: async () => { if (LIVE) { await loadLive(); render(); } },
+    saveSettings: patch => api.saveSettings(patch),
     accessToken: async () => { try { return sb ? ((await sb.auth.getSession()).data.session || {}).access_token || null : null; } catch (e) { return null; } }
   };
   window.LazyApp = {

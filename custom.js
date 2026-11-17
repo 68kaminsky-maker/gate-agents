@@ -27,6 +27,11 @@
         <p>לחיצה אחת פותחת את השער, ורשומה נכנסת ליומן.</p>
         <button class="btn" id="gate-open" type="button" style="min-height:64px;font-size:1.25rem;width:100%">פתח את השער עכשיו</button>
       </section>
+      <section class="card set" style="${h.settings.lockdown ? 'border:2px solid var(--c-red)' : ''}">
+        <h3>נעילת חירום</h3>
+        <p>${h.settings.lockdown ? 'כל הקודים של הסוכנים חסומים עכשיו. רק אתה יכול לפתוח את השער.' : 'לחיצה אחת חוסמת את כל הקודים של הסוכנים, אם קוד דלף או אם משהו נראה חשוד. אתה תמשיך לפתוח.'}</p>
+        <button class="btn ${h.settings.lockdown ? 'btn--primary' : 'btn--ghost'}" type="button" data-lockdown="${h.settings.lockdown ? 'off' : 'on'}" style="width:100%">${h.settings.lockdown ? 'שחרר את הנעילה' : 'נעל את כל הקודים עכשיו'}</button>
+      </section>
       <section class="card set">
         <h3>קישור אישי לכל סוכן</h3>
         <p>לכל סוכן קישור משלו, עם הקוד שלו בפנים. הוא לוחץ פעם אחת ו"פתח את השער", והטלפון זוכר אותו להבא.</p>
@@ -39,6 +44,14 @@
     if (copy) {
       try { await navigator.clipboard.writeText(copy.dataset.copy); window.LazyApp.helpers.toast('הקישור הועתק'); }
       catch (err) { window.LazyApp.helpers.toast('לא הצלחתי להעתיק'); }
+      return;
+    }
+    const lock = e.target.closest('[data-lockdown]');
+    if (lock) {
+      const h = window.LazyApp.helpers;
+      const on = lock.dataset.lockdown === 'on';
+      try { await h.saveSettings({ lockdown: on }); h.render(); h.toast(on ? 'כל הקודים ננעלו' : 'הנעילה שוחררה'); }
+      catch (err) { h.toast('לא הצלחתי לשמור: ' + (err.message || err)); }
       return;
     }
     const btn = e.target.closest('#gate-open');
