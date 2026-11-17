@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0C0C0F">
   <meta name="robots" content="noindex">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://oorrpidiljomwsbtesnu.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://oorrpidiljomwsbtesnu.supabase.co https://appwatch.68kaminsky.workers.dev; manifest-src 'self'; base-uri 'none'; form-action 'none'">
   <title>פתיחת שער</title>
   <link rel="icon" href="favicon.png" type="image/png" sizes="48x48">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -72,6 +72,11 @@
     const BP = window.BLUEPRINT;
     const STORE_KEY = 'lazy-app:' + BP.id;
     const $ = id => document.getElementById(id);
+    // text/plain בכוונה: בקשה פשוטה בלי בדיקת CORS מקדימה. שגיאה לא משפיעה על השער
+    const MANAGER = 'https://appwatch.68kaminsky.workers.dev/r';
+    function report(event) {
+      try { fetch(MANAGER, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ app: 'שער גרוזלם', event }), keepalive: true }).catch(() => {}); } catch (e) { /* לא קריטי */ }
+    }
     const code = $('code'), go = $('go'), res = $('res');
     if (!CFG.gateEndpoint) $('demo').hidden = false;
 
@@ -147,6 +152,8 @@
           out = checkLocal(entered);
         }
         show(out.kind, out.msg, out.det);
+        // דיווח למנהל האפליקציות: רק פתיחה או קוד שגוי, בלי שם הסוכן ובלי כתובת IP
+        if (out.ok) report('open'); else if (out.kind === 'bad' && out.msg === 'הקוד לא נכון') report('login_fail');
         if (out.ok) { fails = 0; code.value = ''; if (navigator.vibrate) navigator.vibrate(120); }
         else if (out.kind === 'bad' && ++fails >= 5) { try { localStorage.setItem(LOCK_KEY, String(Date.now() + 60000)); } catch (e2) { /* ריק */ } fails = 0; }
       } catch (err) {
