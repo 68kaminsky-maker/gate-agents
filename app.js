@@ -351,7 +351,7 @@
     ? `<div class="empty"><b>לא נמצא</b>נסו מילה אחרת או סינון אחר.</div>`
     : `<div class="empty"><b>עוד אין ${esc(t.label)}</b>כאן יופיעו כל ה${esc(t.label)}.<div class="btn-row"><a class="btn btn--primary" href="#/t/${t.id}/new">${icon('plus')}הוספת ${esc(t.item)}</a></div></div>`;
 
-  views.detail = (t, id) => {
+  views.detail = (t, id, params) => {
     const r = (DB.rows[t.id] || []).find(x => x.id === id);
     if (!r) return `${topHtml('לא נמצא', '', `#/t/${t.id}`)}<div class="empty"><b>הרשומה לא קיימת</b>אולי היא נמחקה.</div>`;
     const sf = statusField(t);
@@ -371,6 +371,7 @@
         ${t.subtitle && r[t.subtitle] ? `<p>${esc(display(t, F(t, t.subtitle), r[t.subtitle]))}</p>` : ''}
         ${sf ? `<div class="statuses">${optList(sf).map(o => `<button style="--c:var(--c-${o.color || 'gray'})" class="${r[sf.id] === o.v ? 'on' : ''}" data-set-status="${esc(o.v)}" data-t="${t.id}" data-id="${esc(r.id)}">${esc(o.v)}</button>`).join('')}</div>` : ''}
       </section>
+      ${(detailExtras[t.id] || []).map(fn => { try { return fn(r, helpers, { isNew: Boolean(params && params.get('new')) }) || ''; } catch (e) { return ''; } }).join('')}
       <div class="actions">${actions.join('')}</div>
       ${shown.length ? `<dl class="card fields">${shown.map(f => `<div><dt>${esc(f.label)}</dt><dd class="${f.type === 'longtext' ? 'long' : ''}">${f.type === 'photo' ? `<img src="${esc(r[f.id])}" alt="">` : f.type === 'phone' || f.type === 'email' || f.type === 'money' ? `<span class="ltr">${esc(display(t, f, r[f.id]))}</span>` : esc(display(t, f, r[f.id]))}</dd></div>`).join('')}</dl>` : ''}
       ${related.map(({ ot, f }) => { const rows = sortRows(ot, (DB.rows[ot.id] || []).filter(x => x[f.id] === r.id)); return `<section class="section"><div class="section__head"><h2>${esc(ot.label)} (${rows.length})</h2><a href="#/t/${ot.id}/new?${f.id}=${encodeURIComponent(r.id)}">+ ${esc(ot.item)}</a></div><div class="list">${rows.length ? rows.map(x => itemHtml(ot, x)).join('') : `<div class="empty">עוד אין ${esc(ot.label)} ל${esc(t.item)} הזה</div>`}</div></section>`; }).join('')}
@@ -467,7 +468,10 @@
   // ---------- הרחבות (custom.js) ----------
   // מסך מיוחד: LazyApp.view('report', (params, h) => h.top('דוח') + '<div class="card set">...</div>')
   // ובקובץ המבנה: extraNav: [{ view: 'report', label: 'דוח', icon: 'chart' }]
+  // תוספת לכרטיס פרטים של טבלה: LazyApp.detailExtra('agents', (row, h, ctx) => '<section class="card set">...</section>')
+  // ctx.isNew = הרשומה נוצרה הרגע
   const customViews = {};
+  const detailExtras = {};
   const helpers = {
     get rows() { return DB.rows; },
     get settings() { return DB.settings; },
@@ -483,6 +487,7 @@
   };
   window.LazyApp = {
     view(name, fn) { customViews[name] = fn; if (location.hash.startsWith('#/x/' + name) && DB.rows && Object.keys(DB.rows).length) render(); },
+    detailExtra(tableId, fn) { (detailExtras[tableId] = detailExtras[tableId] || []).push(fn); if (location.hash.startsWith('#/t/' + tableId + '/') && DB.rows && Object.keys(DB.rows).length) render(); },
     helpers
   };
 
@@ -496,7 +501,7 @@
       active = navTables().includes(t) ? t.id : 'more';
       if (parts[2] === 'new') html = views.form(t, null, params);
       else if (parts[2] && parts[3] === 'edit') html = views.form(t, parts[2], params);
-      else if (parts[2]) html = views.detail(t, parts[2]);
+      else if (parts[2]) html = views.detail(t, parts[2], params);
       else html = views.list(t);
     } else if (parts[0] === 'x' && customViews[parts[1]]) {
       active = 'x-' + parts[1];
@@ -622,7 +627,7 @@
     delete row._sample;
     try {
       const saved = await api.save(t.id, row);
-      location.hash = `#/t/${t.id}/${saved.id}`;
+      location.hash = `#/t/${t.id}/${saved.id}${old ? '' : '?new=1'}`;
       setTimeout(() => toast(old ? 'השינויים נשמרו' : `${t.item} נוסף`), 30);
     } catch (err) { toast(err.message || 'השמירה נכשלה'); }
   });
