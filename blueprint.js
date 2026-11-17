@@ -85,15 +85,15 @@ window.BLUEPRINT = {
       { id: 'a7', name: 'אלי פרץ', code: '3384', status: 'חסום', days: 'ימים א׳–ה׳', from: '05:00', to: '07:00', phone: '052-6667788', company: 'משלוחי דרום' }
     ],
     log: [
-      { id: 'l1', agentName: 'אבי מלכה', result: 'נפתח', when: 'today 04:52', note: 'דף הסוכנים' },
-      { id: 'l2', agentName: 'יוסי חדד', result: 'נפתח', when: 'today 05:03', note: 'דף הסוכנים' },
+      { id: 'l1', agentName: 'אבי מלכה', result: 'נפתח', when: 'today 04:52', note: 'דף הנהגים' },
+      { id: 'l2', agentName: 'יוסי חדד', result: 'נפתח', when: 'today 05:03', note: 'דף הנהגים' },
       { id: 'l3', agentName: 'לא מזוהה', result: 'נדחה', when: 'today 05:10', note: 'קוד שגוי: 1111' },
-      { id: 'l4', agentName: 'מוטי אזולאי', result: 'נפתח', when: 'today 05:21', note: 'דף הסוכנים' },
+      { id: 'l4', agentName: 'מוטי אזולאי', result: 'נפתח', when: 'today 05:21', note: 'דף הנהגים' },
       { id: 'l5', agentName: 'רפי בן דוד', result: 'נדחה', when: 'today 05:34', note: 'הקוד מושהה' },
-      { id: 'l6', agentName: 'דני שרעבי', result: 'נפתח', when: 'today 06:05', note: 'דף הסוכנים' },
+      { id: 'l6', agentName: 'דני שרעבי', result: 'נפתח', when: 'today 06:05', note: 'דף הנהגים' },
       { id: 'l7', agentName: 'מוטי אזולאי', result: 'מחוץ לשעות', when: '-1d 22:40', note: 'מותר רק בין 05:00 ל-08:00' },
-      { id: 'l8', agentName: 'אבי מלכה', result: 'נפתח', when: '-1d 04:47', note: 'דף הסוכנים' },
-      { id: 'l9', agentName: 'יוסי חדד', result: 'נפתח', when: '-1d 05:12', note: 'דף הסוכנים' },
+      { id: 'l8', agentName: 'אבי מלכה', result: 'נפתח', when: '-1d 04:47', note: 'דף הנהגים' },
+      { id: 'l9', agentName: 'יוסי חדד', result: 'נפתח', when: '-1d 05:12', note: 'דף הנהגים' },
       { id: 'l10', agentName: 'שמעון לוי', result: 'נפתח', when: '-2d 14:20', note: 'פתיחה ידנית' }
     ]
   }

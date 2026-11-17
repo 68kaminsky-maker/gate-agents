@@ -117,7 +117,7 @@
         writeLog(agent.name, 'מחוץ לשעות', `מותר ${agent.days || ''} ${agent.from || ''}–${agent.to || ''}`);
         return { ok: false, kind: 'warn', msg: 'עכשיו לא בשעות שלך', det: `מותר ${agent.days || 'כל הימים'}, ${agent.from || ''}–${agent.to || ''}` };
       }
-      writeLog(agent.name, 'נפתח', 'דף הסוכנים');
+      writeLog(agent.name, 'נפתח', 'דף הנהגים');
       return { ok: true, kind: 'ok', msg: `השער נפתח, ${agent.name.split(' ')[0]}`, det: 'נסיעה טובה.' };
     }
 
