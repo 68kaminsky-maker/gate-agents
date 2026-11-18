@@ -103,6 +103,7 @@
   let sb = null;
   let ws = null; // הסביבה של העסק בענן
   let session = null;
+  let ROLE = null; // התפקיד של המשתמש הנוכחי במרחב העבודה: owner או editor
 
   function seedRows() {
     const out = {};
@@ -458,6 +459,12 @@
         <a class="btn btn--ghost" href="blueprint.html">${icon('structure')}מבנה המערכת</a>
         ${LIVE ? `<p class="muted">מחובר בתור <span class="ltr">${esc(session?.user?.email || '')}</span></p><button class="btn btn--danger" data-logout>יציאה</button>` : `<p class="demo-note"><b>מצב הדגמה.</b> הנתונים נשמרים רק בדפדפן הזה. אחרי חיבור לענן המערכת עובדת מכל מכשיר, ועם הצוות.</p>`}
       </section>
+      ${LIVE && ROLE === 'owner' ? `<section class="card set"><h3>משתמשים במערכת</h3>
+        <p class="muted">המשתמש צריך להיכנס למערכת פעם אחת במייל שלו. אחר כך מוסיפים אותו כאן, והוא רואה את אותם נתונים.</p>
+        <div class="f"><label for="inv-email">המייל של המשתמש</label><input id="inv-email" type="email" dir="ltr" autocomplete="off"></div>
+        <button class="btn btn--primary" type="button" data-invite>הוספת משתמש</button>
+        <p class="muted" data-invite-note></p>
+      </section>` : ''}
       <section class="card set"><h3>להוספה למסך הבית</h3>
         <p class="muted">באייפון: כפתור השיתוף ואז "הוספה למסך הבית". באנדרואיד: התפריט של Chrome ואז "התקנת אפליקציה".</p>
       </section>`;
@@ -571,6 +578,17 @@
     if (el.hasAttribute('data-clear-samples')) {
       for (const t of BP.tables) DB.rows[t.id] = (DB.rows[t.id] || []).filter(r => !r._sample);
       Demo.persist(); render(); toast('נתוני הדוגמה נמחקו. המערכת מוכנה לעבודה.');
+      return;
+    }
+    if (el.hasAttribute('data-invite')) {
+      const note = root.querySelector('[data-invite-note]');
+      const email = (root.querySelector('#inv-email')?.value || '').trim();
+      if (!/^\S+@\S+\.\S+$/.test(email)) { if (note) note.textContent = 'הכניסו מייל תקין.'; return; }
+      if (note) note.textContent = 'מוסיף...';
+      const { error } = await sb.rpc('add_member_by_email', { p_workspace: ws.id, p_email: email });
+      if (error) { if (note) note.textContent = error.message || 'ההוספה נכשלה'; return; }
+      if (note) note.textContent = 'נוסף. המשתמש יכול להיכנס עכשיו.';
+      root.querySelector('#inv-email').value = '';
       return;
     }
     if (el.hasAttribute('data-logout')) { await sb.auth.signOut(); location.reload(); }
@@ -693,12 +711,11 @@
     });
   }
   async function loadLive() {
-    let { data: mem } = await sb.from('members').select('role, workspace:workspaces(id, name, settings)').limit(1);
-    if (!mem || !mem.length) {
-      const { error } = await sb.rpc('create_workspace', { p_name: BP.name });
-      if (error) throw error;
-      ({ data: mem } = await sb.from('members').select('role, workspace:workspaces(id, name, settings)').limit(1));
-    }
+    // משתמש שאין לו חברות במרחב עבודה לא מקבל מרחב חדש. בעל העסק מוסיף אותו מלשונית ההגדרות
+    const { data: mem, error: memErr } = await sb.from('members').select('role, workspace:workspaces(id, name, settings)').limit(1);
+    if (memErr) throw memErr;
+    if (!mem || !mem.length) throw new Error('אין לך גישה למערכת הזו. פנו לבעל העסק כדי שיוסיף אתכם.');
+    ROLE = mem[0].role;
     ws = mem[0].workspace;
     DB.settings = ws.settings || {};
     const { data: recs, error } = await sb.from('records').select('id, table_name, data, created_at, updated_at').eq('workspace_id', ws.id);
