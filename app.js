@@ -104,6 +104,7 @@
   let ws = null; // הסביבה של העסק בענן
   let session = null;
   let ROLE = null; // התפקיד של המשתמש הנוכחי במרחב העבודה: owner או editor
+  let MEMBERS = []; // רשימת המחוברים למרחב, נטענת רק לבעל העסק
 
   function seedRows() {
     const out = {};
@@ -459,11 +460,10 @@
         <a class="btn btn--ghost" href="blueprint.html">${icon('structure')}מבנה המערכת</a>
         ${LIVE ? `<p class="muted">מחובר בתור <span class="ltr">${esc(session?.user?.email || '')}</span></p><button class="btn btn--danger" data-logout>יציאה</button>` : `<p class="demo-note"><b>מצב הדגמה.</b> הנתונים נשמרים רק בדפדפן הזה. אחרי חיבור לענן המערכת עובדת מכל מכשיר, ועם הצוות.</p>`}
       </section>
-      ${LIVE && ROLE === 'owner' ? `<section class="card set"><h3>משתמשים במערכת</h3>
-        <p class="muted">המשתמש צריך להיכנס למערכת פעם אחת במייל שלו. אחר כך מוסיפים אותו כאן, והוא רואה את אותם נתונים.</p>
-        <div class="f"><label for="inv-email">המייל של המשתמש</label><input id="inv-email" type="email" dir="ltr" autocomplete="off"></div>
-        <button class="btn btn--primary" type="button" data-invite>הוספת משתמש</button>
-        <p class="muted" data-invite-note></p>
+      ${LIVE && ROLE === 'owner' ? `<section class="card set"><h3>מי מחובר למערכת</h3>
+        <p class="muted">כל מי שנכנס במייל מצטרף אוטומטית, והוא רואה את אותם נתונים. כאן רואים את כולם, ואפשר להסיר מישהו.</p>
+        <div class="list">${MEMBERS.map(m => `<div class="item"><span class="item__main"><b class="ltr">${esc(m.email_addr || '')}</b><small>${m.member_role === 'owner' ? 'בעל העסק' : 'משתמש'}${m.seen_at ? ' · נכנס לאחרונה ' + esc(new Date(m.seen_at).toLocaleDateString('he-IL')) : ''}</small></span>${m.member_role === 'owner' ? '' : `<button class="btn btn--danger btn--sm" type="button" data-remove-member="${esc(m.uid)}">הסרה</button>`}</div>`).join('')}</div>
+        <p class="muted" data-member-note></p>
       </section>` : ''}
       <section class="card set"><h3>להוספה למסך הבית</h3>
         <p class="muted">באייפון: כפתור השיתוף ואז "הוספה למסך הבית". באנדרואיד: התפריט של Chrome ואז "התקנת אפליקציה".</p>
@@ -580,15 +580,13 @@
       Demo.persist(); render(); toast('נתוני הדוגמה נמחקו. המערכת מוכנה לעבודה.');
       return;
     }
-    if (el.hasAttribute('data-invite')) {
-      const note = root.querySelector('[data-invite-note]');
-      const email = (root.querySelector('#inv-email')?.value || '').trim();
-      if (!/^\S+@\S+\.\S+$/.test(email)) { if (note) note.textContent = 'הכניסו מייל תקין.'; return; }
-      if (note) note.textContent = 'מוסיף...';
-      const { error } = await sb.rpc('add_member_by_email', { p_workspace: ws.id, p_email: email });
-      if (error) { if (note) note.textContent = error.message || 'ההוספה נכשלה'; return; }
-      if (note) note.textContent = 'נוסף. המשתמש יכול להיכנס עכשיו.';
-      root.querySelector('#inv-email').value = '';
+    if (d.removeMember) {
+      const note = root.querySelector('[data-member-note]');
+      if (!confirm('להסיר את המשתמש הזה מהמערכת?')) return;
+      const { error } = await sb.rpc('remove_member', { p_workspace: ws.id, p_user: d.removeMember });
+      if (error) { if (note) note.textContent = error.message; return; }
+      MEMBERS = MEMBERS.filter(m => m.uid !== d.removeMember);
+      render();
       return;
     }
     if (el.hasAttribute('data-logout')) { await sb.auth.signOut(); location.reload(); }
@@ -711,11 +709,19 @@
     });
   }
   async function loadLive() {
-    // משתמש שאין לו חברות במרחב עבודה לא מקבל מרחב חדש. בעל העסק מוסיף אותו מלשונית ההגדרות
+    // כל מי שנכנס במייל מצטרף אוטומטית למרחב של בעל העסק. אם עוד אין בעלים בכלל, המרחב נוצר עכשיו
+    const { data: joined, error: joinErr } = await sb.rpc('join_workspace_on_login');
+    if (joinErr) throw joinErr;
+    if (!joined) { const { error: createErr } = await sb.rpc('create_workspace', { p_name: BP.name }); if (createErr) throw createErr; }
     const { data: mem, error: memErr } = await sb.from('members').select('role, workspace:workspaces(id, name, settings)').limit(1);
     if (memErr) throw memErr;
-    if (!mem || !mem.length) throw new Error('אין לך גישה למערכת הזו. פנו לבעל העסק כדי שיוסיף אתכם.');
+    if (!mem || !mem.length) throw new Error('לא הצלחנו לחבר את החשבון למרחב. נסו שוב.');
     ROLE = mem[0].role;
+    if (ROLE === 'owner') {
+      const { data: list, error: listErr } = await sb.rpc('list_members', { p_workspace: mem[0].workspace.id });
+      if (listErr) throw listErr;
+      MEMBERS = list || [];
+    }
     ws = mem[0].workspace;
     DB.settings = ws.settings || {};
     const { data: recs, error } = await sb.from('records').select('id, table_name, data, created_at, updated_at').eq('workspace_id', ws.id);
