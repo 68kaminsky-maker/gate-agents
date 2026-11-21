@@ -105,6 +105,7 @@
   let session = null;
   let ROLE = null; // התפקיד של המשתמש הנוכחי במרחב העבודה: owner או editor
   let MEMBERS = []; // רשימת המחוברים למרחב, נטענת רק לבעל העסק
+  let LAST_INVITE = ''; // המייל שהוזמן הרגע, כדי להציע שליחה בוואטסאפ
 
   function seedRows() {
     const out = {};
@@ -461,8 +462,13 @@
         ${LIVE ? `<p class="muted">מחובר בתור <span class="ltr">${esc(session?.user?.email || '')}</span></p><button class="btn btn--danger" data-logout>יציאה</button>` : `<p class="demo-note"><b>מצב הדגמה.</b> הנתונים נשמרים רק בדפדפן הזה. אחרי חיבור לענן המערכת עובדת מכל מכשיר, ועם הצוות.</p>`}
       </section>
       ${LIVE && ROLE === 'owner' ? `<section class="card set"><h3>מי מחובר למערכת</h3>
-        <p class="muted">כל מי שנכנס במייל מצטרף אוטומטית, והוא רואה את אותם נתונים. כאן רואים את כולם, ואפשר להסיר מישהו.</p>
-        <div class="list">${MEMBERS.map(m => `<div class="item"><span class="item__main"><b class="ltr">${esc(m.email_addr || '')}</b><small>${m.member_role === 'owner' ? 'בעל העסק' : 'משתמש'}${m.seen_at ? ' · נכנס לאחרונה ' + esc(new Date(m.seen_at).toLocaleDateString('he-IL')) : ''}</small></span>${m.member_role === 'owner' ? '' : `<button class="btn btn--danger btn--sm" type="button" data-remove-member="${esc(m.uid)}">הסרה</button>`}</div>`).join('')}</div>
+        <p class="muted">רק מי שהזמנת יכול להיכנס, והוא רואה את אותם נתונים כמוך. כאן מזמינים, רואים את כולם, ואפשר להסיר מישהו.</p>
+        <form data-invite-member novalidate>
+          <div class="f"><label for="inv-email">המייל של מי שרוצים להזמין</label><input id="inv-email" class="ltr" type="email" inputmode="email" autocomplete="off" placeholder="name@example.com"></div>
+          <button class="btn btn--primary" type="submit">${icon('plus')}הזמנה</button>
+        </form>
+        ${LAST_INVITE ? `<div class="demo-note"><b>${esc(LAST_INVITE)}</b> הוזמן. כשייכנס עם המייל הזה, הוא יצטרף לבד.<br><a class="btn btn--ghost btn--sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('הוזמנת ל"שער · נהגים". נכנסים כאן עם המייל הזה: ' + location.href.split('#')[0])}">${icon('chat')}שליחת הזמנה בוואטסאפ</a></div>` : ''}
+        <div class="list">${MEMBERS.map(m => `<div class="item"><span class="item__main"><b class="ltr">${esc(m.email_addr || '')}</b><small>${m.member_role === 'owner' ? 'בעל העסק' : 'משתמש'}${m.seen_at ? ' · נכנס לאחרונה ' + esc(new Date(m.seen_at).toLocaleDateString('he-IL')) : ' · הוזמן, עוד לא נכנס'}</small></span>${m.member_role === 'owner' ? '' : `<button class="btn btn--danger btn--sm" type="button" data-remove-member="${esc(m.uid)}">הסרה</button>`}</div>`).join('')}</div>
         <p class="muted" data-member-note></p>
       </section>` : ''}
       <section class="card set"><h3>להוספה למסך הבית</h3>
@@ -613,6 +619,24 @@
   });
 
   root.addEventListener('submit', async e => {
+    const inv = e.target.closest('[data-invite-member]');
+    if (inv) {
+      e.preventDefault();
+      const note = root.querySelector('[data-member-note]');
+      const email = (inv.querySelector('#inv-email').value || '').trim().toLowerCase();
+      if (!/^\S+@\S+\.\S+$/.test(email)) { if (note) note.textContent = 'כתובת המייל לא תקינה.'; return; }
+      const btn = inv.querySelector('button[type="submit"]'); btn.disabled = true;
+      const { error } = await sb.rpc('invite_member', { p_workspace: ws.id, p_email: email });
+      if (error) { btn.disabled = false; if (note) note.textContent = error.message; return; }
+      try {
+        const { data: list, error: listErr } = await sb.rpc('list_members', { p_workspace: ws.id });
+        if (!listErr) MEMBERS = list || [];
+      } catch (err) { /* הרשימה תתרענן בכניסה הבאה */ }
+      LAST_INVITE = email;
+      render();
+      toast('ההזמנה נשמרה');
+      return;
+    }
     const form = e.target.closest('[data-form]');
     if (!form) return;
     e.preventDefault();
